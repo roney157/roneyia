@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VídeoIA - Gerador de Vídeos com IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+        }
+        .video-preview {
+            aspect-ratio: 16/9;
+            background-color: #f3f4f6;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .video-preview::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 48%, rgba(255,255,255,0.3) 50%, transparent 52%);
+            background-size: 200% 200%;
+            animation: shimmer 2s infinite linear;
+        }
+        @keyframes shimmer {
+            0% { background-position: 100% 100%; }
+            100% { background-position: 0 0; }
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .text-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(167, 119, 227, 0.3);
+        }
+        .video-content {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .video-content.active {
+            opacity: 1;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-text {
+            animation: slideIn 0.8s ease forwards;
+        }
+        .image-transition {
+            animation: zoomPan 20s infinite linear;
+        }
+        @keyframes zoomPan {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-video text-2xl"></i>
+                    <h1 class="text-2xl font-bold">VídeoIA Pro</h1>
+                </div>
+                <nav>
+                    <ul class="flex space-x-6">
+                        <li><a href="#" class="hover:underline">Início</a></li>
+                        <li><a href="#" class="hover:underline">Recursos</a></li>
+                        <li><a href="#" class="hover:underline">Sobre</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-12">
+        <section class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">Crie Vídeos Profissionais com IA</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">Nossa IA transforma seu texto em vídeos completos com imagens relevantes, motion graphics e narração automática - tudo em 1 minuto!</p>
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-2xl font-semibold text-gray-800 mb-6">Configurações do Vídeo</h3>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-700 mb-2 font-medium">Digite seu texto (em português)</label>
+                    <textarea id="textInput" class="w-full text-input border border-gray-300 rounded-lg p-4 h-32 focus:border-purple-500" placeholder="Ex: Aprenda a criar vídeos incríveis com nossa ferramenta. Basta digitar seu texto e nossa IA cuida do resto, adicionando imagens perfeitas e animações profissionais..."></textarea>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-700 mb-2 font-medium">Estilo Visual</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button data-style="professional" class="style-option border border-gray-300 rounded-lg p-3 hover:border-purple-500 hover:bg-purple-50 transition">
+                            <i class="fas fa-briefcase text-2xl mb-2 text-purple-600"></i>
+                            <span>Profissional</span>
+                        </button>
+                        <button data-style="modern" class="style-option border border-gray-300 rounded-lg p-3 hover:border-purple-500 hover:bg-purple-50 transition">
+                            <i class="fas fa-paint-brush text-2xl mb-2 text-blue-600"></i>
+                            <span>Moderno</span>
+                        </button>
+                        <button data-style="dynamic" class="style-option border border-gray-300 rounded-lg p-3 hover:border-purple-500 hover:bg-purple-50 transition">
+                            <i class="fas fa-bolt text-2xl mb-2 text-yellow-500"></i>
+                            <span>Dinâmico</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-700 mb-2 font-medium">Tipo de Motion</label>
+                    <select id="motionType" class="w-full border border-gray-300 rounded-lg p-3 focus:border-purple-500">
+                        <option value="zoom">Zoom e Pan (Suave)</option>
+                        <option value="slide">Transições em Slide</option>
+                        <option value="dynamic">Animação Dinâmica</option>
+                        <option value="none">Sem Animação</option>
+                    </select>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-700 mb-2 font-medium">Voz Narradora</label>
+                    <select class="w-full border border-gray-300 rounded-lg p-3 focus:border-purple-500">
+                        <option>Voz Feminina (Padrão)</option>
+                        <option>Voz Masculina</option>
+                        <option>Voz Jovem</option>
+                        <option>Sem Narração</option>
+                    </select>
+                </div>
+                
+                <button id="generateBtn" class="w-full gradient-bg text-white py-4 rounded-lg font-semibold text-lg hover:opacity-90 transition flex items-center justify-center">
+                    <i class="fas fa-magic mr-2"></i> Gerar Vídeo Automático
+                </button>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-2xl font-semibold text-gray-800 mb-6">Pré-visualização do Vídeo</h3>
+                
+                <div class="video-preview mb-6" id="videoPreview">
+                    <div class="text-center p-6 z-10">
+                        <i class="fas fa-play-circle text-5xl text-purple-500 mb-4"></i>
+                        <p class="text-gray-600">Seu vídeo com imagens e motion aparecerá aqui</p>
+                    </div>
+                </div>
+                
+                <div id="progressContainer" class="hidden mb-6">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">Gerando vídeo com IA...</span>
+                        <span id="progressPercent" class="text-sm font-medium text-gray-700">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="progressBar" class="progress-bar bg-purple-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Processando texto, selecionando imagens e criando animações...</p>
+                </div>
+                
+                <div id="downloadSection" class="hidden">
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle text-green-500 text-2xl mr-3"></i>
+                            <div>
+                                <h4 class="font-semibold text-green-800">Vídeo pronto!</h4>
+                                <p class="text-green-600 text-sm">Seu vídeo de 1 minuto com imagens e motion foi gerado com sucesso.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <button id="regenerateBtn" class="bg-purple-100 text-purple-700 py-3 rounded-lg font-medium hover:bg-purple-200 transition flex items-center justify-center">
+                            <i class="fas fa-redo mr-2"></i> Regenerar
+                        </button>
+                        <button id="downloadBtn" class="gradient-bg text-white py-3 rounded-lg font-medium hover:opacity-90 transition flex items-center justify-center">
+                            <i class="fas fa-download mr-2"></i> Baixar MP4
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="tipsSection" class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-blue-800 mb-2 flex items-center">
+                        <i class="fas fa-lightbulb text-blue-500 mr-2"></i> Dicas para melhores vídeos
+                    </h4>
+                    <ul class="text-sm text-blue-700 list-disc pl-5 space-y-1">
+                        <li>Descreva cenas específicas para imagens mais relevantes</li>
+                        <li>Use parágrafos curtos para melhores transições</li>
+                        <li>Mencione objetos ou ações para animações precisas</li>
+                        <li>Textos claros geram vídeos mais coesos</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <section class="bg-gray-100 py-16">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Recursos Avançados</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-images text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-center">Banco de Imagens IA</h3>
+                    <p class="text-gray-600">Nossa IA seleciona automaticamente as melhores imagens royalty-free que combinam com seu conteúdo.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-film text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-center">Motion Graphics</h3>
+                    <p class="text-gray-600">Animações profissionais incluindo zoom, pan, transições e efeitos de texto dinâmicos.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-robot text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2 text-center">Narração Automática</h3>
+                    <p class="text-gray-600">Vozes naturais em português que sincronizam perfeitamente com as imagens e animações.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fas fa-video mr-2"></i> VídeoIA Pro
+                    </h3>
+                    <p class="text-gray-400">A maneira mais inteligente de criar vídeos profissionais automaticamente.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Links Úteis</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Exemplos</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Tutoriais</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">API para Desenvolvedores</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Legal</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Termos de Uso</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Política de Privacidade</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Licença de Imagens</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Contato</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-center">
+                            <i class="fas fa-envelope text-gray-400 mr-2"></i>
+                            <span class="text-gray-400">suporte@videoiapro.com</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fab fa-whatsapp text-gray-400 mr-2"></i>
+                            <span class="text-gray-400">(11) 98765-4321</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>© 2023 VídeoIA Pro. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const generateBtn = document.getElementById('generateBtn');
+            const regenerateBtn = document.getElementById('regenerateBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const downloadSection = document.getElementById('downloadSection');
+            const progressBar = document.getElementById('progressBar');
+            const progressPercent = document.getElementById('progressPercent');
+            const textInput = document.getElementById('textInput');
+            const videoPreview = document.getElementById('videoPreview');
+            const motionType = document.getElementById('motionType');
+            
+            // Imagens de exemplo baseadas em categorias
+            const imageCategories = {
+                'aprender': 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?ixlib=rb-4.0.3',
+                'criar': 'https://images.unsplash.com/photo-1501504905252-473c47e087f8?ixlib=rb-4.0.3',
+                'ferramenta': 'https://images.unsplash.com/photo-1581093450021-33f024153230?ixlib=rb-4.0.3',
+                'digital': 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3',
+                'negócio': 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?ixlib=rb-4.0.3',
+                'tecnologia': 'https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3',
+                'default': 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3'
+            };
+            
+            // Gerar vídeo
+            function generateVideo() {
+                if (!textInput.value.trim()) {
+                    alert('Por favor, digite um texto para gerar o vídeo.');
+                    return;
+                }
+                
+                // Mostrar progresso
+                progressContainer.classList.remove('hidden');
+                downloadSection.classList.add('hidden');
+                videoPreview.innerHTML = '';
+                
+                // Simular geração do vídeo
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.floor(Math.random() * 10) + 5;
+                    if (progress > 100) progress = 100;
+                    
+                    progressBar.style.width = progress + '%';
+                    progressPercent.textContent = progress + '%';
+                    
+                    // Atualizações durante o processo
+                    if (progress === 25) {
+                        progressPercent.textContent += ' - Analisando texto...';
+                    } else if (progress === 50) {
+                        progressPercent.textContent += ' - Selecionando imagens...';
+                    } else if (progress === 75) {
+                        progressPercent.textContent += ' - Criando animações...';
+                    }
+                    
+                    if (progress === 100) {
+                        clearInterval(interval);
+                        setTimeout(() => {
+                            progressContainer.classList.add('hidden');
+                            downloadSection.classList.remove('hidden');
+                            showGeneratedVideo();
+                        }, 500);
+                    }
+                }, 300);
+            }
+            
+            // Mostrar o vídeo gerado
+            function showGeneratedVideo() {
+                const text = textInput.value;
+                const sentences = text.split(/[.!?]\s/).filter(s => s.length > 0);
+                const selectedMotion = motionType.value;
+                
+                // Limpar preview
+                videoPreview.innerHTML = '';
+                
+                // Criar cenas para cada frase
+                sentences.forEach((sentence, index) => {
+                    // Determinar imagem baseada em palavras-chave
+                    let imageUrl = imageCategories.default;
+                    const lowerSentence = sentence.toLowerCase();
+                    
+                    if (lowerSentence.includes('aprender') || lowerSentence.includes('estudar')) {
+                        imageUrl = imageCategories.aprender;
+                    } else if (lowerSentence.includes('criar') || lowerSentence.includes('fazer')) {
+                        imageUrl = imageCategories.criar;
+                    } else if (lowerSentence.includes('ferramenta') || lowerSentence.includes('aplicativo')) {
+                        imageUrl = imageCategories.ferramenta;
+                    } else if (lowerSentence.includes('digital') || lowerSentence.includes('online')) {
+                        imageUrl = imageCategories.digital;
+                    } else if (lowerSentence.includes('negócio') || lowerSentence.includes('empresa')) {
+                        imageUrl = imageCategories['negócio'];
+                    } else if (lowerSentence.includes('tecnologia') || lowerSentence.includes('inovação')) {
+                        imageUrl = imageCategories.tecnologia;
+                    }
+                    
+                    // Criar elemento de cena
+                    const scene = document.createElement('div');
+                    scene.className = `video-content ${selectedMotion === 'zoom' ? 'image-transition' : ''}`;
+                    scene.style.backgroundImage = `url(${imageUrl})`;
+                    
+                    // Adicionar overlay escuro para melhor legibilidade
+                    const overlay = document.createElement('div');
+                    overlay.className = 'absolute inset-0 bg-black bg-opacity-40';
+                    scene.appendChild(overlay);
+                    
+                    // Adicionar texto
+                    const textElement = document.createElement('div');
+                    textElement.className = 'relative z-10 max-w-2xl animate-text';
+                    textElement.style.animationDelay = `${index * 0.2}s`;
+                    textElement.innerHTML = `
+                        <h3 class="text-2xl font-bold mb-4">${sentence.charAt(0).toUpperCase() + sentence.slice(1)}</h3>
+                    `;
+                    scene.appendChild(textElement);
+                    
+                    // Adicionar ao preview
+                    videoPreview.appendChild(scene);
+                    
+                    // Mostrar cena com delay
+                    setTimeout(() => {
+                        scene.classList.add('active');
+                    }, index * 3000);
+                });
+                
+                // Adicionar botão de play (simulação)
+                const playBtn = document.createElement('button');
+                playBtn.className = 'absolute bottom-4 right-4 bg-white text-purple-600 px-4 py-2 rounded-full font-medium flex items-center z-20';
+                playBtn.innerHTML = '<i class="fas fa-play mr-2"></i> Reproduzir';
+                playBtn.addEventListener('click', function() {
+                    alert('Simulação: Vídeo seria reproduzido aqui com todas as cenas e animações!');
+                });
+                videoPreview.appendChild(playBtn);
+            }
+            
+            // Event listeners
+            generateBtn.addEventListener('click', generateVideo);
+            
+            regenerateBtn?.addEventListener('click', generateVideo);
+            
+            downloadBtn?.addEventListener('click', function() {
+                alert('Simulação: Vídeo seria baixado em formato MP4 com todas as cenas e animações!');
+            });
+            
+            // Efeito de seleção nos estilos
+            const styleOptions = document.querySelectorAll('.style-option');
+            styleOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    styleOptions.forEach(opt => opt.classList.remove('border-purple-500', 'bg-purple-50'));
+                    this.classList.add('border-purple-500', 'bg-purple-50');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
